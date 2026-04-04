@@ -76,7 +76,7 @@ export default function Contests() {
                 </div>
               </div>
               
-              <button className="w-full bg-white hover:bg-gray-200 text-black font-semibold py-2.5 rounded-lg transition">
+              <button className="w-full bg-gray-300 hover:bg-gray-200 text-black font-semibold py-2.5 rounded-lg transition">
                 Register
               </button>
             </div>
