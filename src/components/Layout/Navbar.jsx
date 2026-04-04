@@ -1,9 +1,32 @@
 import { Link } from "react-router-dom";
-import { Moon, User } from "lucide-react";
+import { Moon, Sun, User } from "lucide-react";
 import { useState, useEffect } from "react";
 
 export default function Navbar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(true);
+
+  useEffect(() => {
+    if (localStorage.getItem("theme") === "light") {
+      setIsDarkMode(false);
+      document.documentElement.classList.remove("dark");
+    } else {
+      setIsDarkMode(true);
+      document.documentElement.classList.add("dark");
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    if (isDarkMode) {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+      setIsDarkMode(false);
+    } else {
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+      setIsDarkMode(true);
+    }
+  };
 
   useEffect(() => {
     const checkAuth = () => {
@@ -17,35 +40,36 @@ export default function Navbar() {
   }, []);
 
   return (
-    <nav className="w-full fixed top-0 left-0 z-50 bg-gradient-to-r from-[#0b1220] to-[#0f172a] backdrop-blur-md">
+    <nav className="w-full fixed top-0 left-0 z-50 backdrop-blur-md border-b" 
+         style={{ background: 'linear-gradient(to right, var(--bg-header-start), var(--bg-header-end))', borderColor: 'var(--border-line)' }}>
       
       <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
         
         <div className="flex items-center gap-2">
-          <h1 className="text-white font-semibold text-lg">
-            Leetclone
+          <h1 className="font-semibold text-lg" style={{ color: 'var(--text-main)' }}>
+            LeetClone
           </h1>
         </div>
 
-        <div className="hidden md:flex items-center gap-6 text-gray-300 text-sm">
-          <Link to="/problems" className="hover:text-white transition">
+        <div className="hidden md:flex items-center gap-6 text-sm" style={{ color: 'var(--text-sub)' }}>
+          <Link to="/problems" className="hover:text-orange-400 transition">
             Problems
           </Link>
-          <Link to="/contests" className="hover:text-white transition">
+          <Link to="/contests" className="hover:text-orange-400 transition">
             Contests
           </Link>
-          <Link to="/leaderboard" className="hover:text-white transition">
+          <Link to="/leaderboard" className="hover:text-orange-400 transition">
             Leaderboard
           </Link>
-          <Link to="/discuss" className="hover:text-white transition">
+          <Link to="/discuss" className="hover:text-orange-400 transition">
             Discuss
           </Link>
         </div>
 
         <div className="flex items-center gap-4">
           
-          <button className="text-gray-300 hover:text-white">
-            <Moon size={18} />
+          <button onClick={toggleTheme} className="hover:text-orange-400 transition" style={{ color: 'var(--text-sub)' }}>
+            {isDarkMode ? <Moon size={18} /> : <Sun size={18} />}
           </button>
 
 

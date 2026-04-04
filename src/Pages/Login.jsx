@@ -4,9 +4,9 @@ export default function Login() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0b1220] text-white px-4">
+    <div className="min-h-screen flex items-center justify-center bg-[var(--bg-main)] text-[var(--text-main)] px-4 transition-colors duration-300">
       
-      <div className="w-full max-w-md bg-[#111827] p-8 rounded-2xl shadow-lg">
+      <div className="w-full max-w-md bg-[var(--bg-card)] border border-[var(--border-line)] p-8 rounded-2xl shadow-lg transition-colors duration-300">
         
         <h2 className="text-3xl font-bold text-center mb-6">
           Welcome Back to coding !
@@ -17,13 +17,15 @@ export default function Login() {
           <input
             type="email"
             placeholder="Email"
-            className="p-3 rounded bg-gray-800 border border-gray-700 focus:outline-none focus:border-orange-500"
+            className="p-3 rounded bg-[var(--bg-alt)] border border-[var(--border-line)] focus:outline-none focus:border-orange-500 transition-colors duration-300"
+            style={{ color: 'var(--text-main)' }}
           />
 
           <input
             type="password"
             placeholder="Password"
-            className="p-3 rounded bg-gray-800 border border-gray-700 focus:outline-none focus:border-orange-500"
+            className="p-3 rounded bg-[var(--bg-alt)] border border-[var(--border-line)] focus:outline-none focus:border-orange-500 transition-colors duration-300"
+            style={{ color: 'var(--text-main)' }}
           />
 
           <button
@@ -41,7 +43,7 @@ export default function Login() {
         </form>
 
         {/* Footer */}
-        <p className="text-sm text-gray-400 mt-6 text-center">
+        <p className="text-sm mt-6 text-center" style={{ color: 'var(--text-sub)' }}>
           Don’t have an account?{" "}
           <span className="text-orange-400 cursor-pointer hover:underline">
             Sign up

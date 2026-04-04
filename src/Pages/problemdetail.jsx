@@ -11,16 +11,16 @@ export default function ProblemDetail() {
   }
 
   return (
-    <div className="h-screen flex bg-[#0b1220] text-white">
+    <div className="h-screen flex bg-[var(--bg-main)] text-[var(--text-main)] transition-colors duration-300">
 
       {/* LEFT SIDE - DESCRIPTION */}
-      <div className="w-1/2 p-6 border-r border-gray-700 overflow-y-auto">
+      <div className="w-1/2 p-6 border-r border-[var(--border-line)] overflow-y-auto">
         
         <h1 className="text-2xl font-bold mb-4">
           {problem.title}
         </h1>
 
-        <p className="text-gray-300 mb-4">
+        <p className="mb-4" style={{ color: 'var(--text-sub)' }}>
           This is a sample problem description. Later you will fetch real data from backend.
         </p>
 
@@ -34,7 +34,8 @@ export default function ProblemDetail() {
       <div className="w-1/2 p-6 flex flex-col">
 
         <textarea
-          className="flex-1 bg-black text-green-400 p-4 rounded font-mono text-sm outline-none"
+          className="flex-1 bg-[var(--bg-header-start)] border border-[var(--border-line)] p-4 rounded font-mono text-sm outline-none transition-colors duration-300"
+          style={{ color: 'var(--text-main)' }}
           placeholder="// Write your code here..."
         />
 

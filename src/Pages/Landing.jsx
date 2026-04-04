@@ -5,7 +5,7 @@ export default function Landing() {
   const navigate = useNavigate();
 
   return (
-    <div className="bg-[#0b1220] text-white ">
+    <div className="text-[var(--text-main)] transition-colors duration-300">
 
       <div className="relative h-screen w-full">
 
@@ -23,7 +23,7 @@ export default function Landing() {
             Ready to evolve your stack?
           </h1>
 
-          <p className="text-gray-300 mb-6 max-w-xl">
+          <p className="mb-6 max-w-xl" style={{ color: 'var(--text-sub)' }}>
             Practice DSA, compete in contests, and become a better developer.
           </p>
 
