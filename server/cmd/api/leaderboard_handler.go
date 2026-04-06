@@ -8,8 +8,8 @@ import (
 
 func (app *application) globalLeaderboardHandler(w http.ResponseWriter, r *http.Request) {
 	filters := data.Filters{
-		Page:     app.readInt(r, "page", 1),
-		PageSize: app.readInt(r, "page_size", 50),
+		Page:     app.readIntWithBounds(r, "page", 1, 1, 10000),
+		PageSize: app.readIntWithBounds(r, "page_size", 50, 1, 100),
 	}
 
 	entries, metadata, err := app.models.Leaderboard.Global(filters)

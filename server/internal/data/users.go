@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -55,14 +56,16 @@ func (m UserModel) Insert(user *User, password string) error {
 	).Scan(&user.ID, &user.CreatedAt)
 
 	if err != nil {
-		switch {
-		case err.Error() == `ERROR: duplicate key value violates unique constraint "users_email_key" (SQLSTATE 23505)`:
-			return ErrDuplicateEmail
-		case err.Error() == `ERROR: duplicate key value violates unique constraint "users_username_key" (SQLSTATE 23505)`:
-			return ErrDuplicateUsername
-		default:
-			return err
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			if pgErr.ConstraintName == "users_email_key" {
+				return ErrDuplicateEmail
+			}
+			if pgErr.ConstraintName == "users_username_key" {
+				return ErrDuplicateUsername
+			}
 		}
+		return err
 	}
 
 	return nil

@@ -56,14 +56,17 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[var(--bg-main)] text-[var(--text-main)] px-4 transition-colors duration-300">
-      <div className="w-full max-w-md bg-[var(--bg-card)] border border-[var(--border-line)] p-8 rounded-2xl shadow-lg transition-colors duration-300">
-        <h2 className="text-3xl font-bold text-center mb-6">
-          {isRegister ? "Create Account" : "Welcome Back!"}
+    <div className="min-h-screen flex items-center justify-center bg-[var(--bg-main)] text-[var(--text-main)] px-4 py-12 transition-colors duration-300">
+      <div className="w-full max-w-md px-8 py-10 transition-colors duration-300">
+        <h2 className="text-3xl font-bold text-center mb-2">
+          {isRegister ? "Create Account" : "Welcome Back"}
         </h2>
+        <p className="text-center text-sm mb-8" style={{ color: "var(--text-sub)" }}>
+          {isRegister ? "Start your coding journey" : "Continue your progress"}
+        </p>
 
         {error && (
-          <div className="mb-4 p-3 rounded bg-red-500/10 border border-red-500/30 text-red-400 text-sm text-center">
+          <div className="mb-6 p-4 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
             {error}
           </div>
         )}
@@ -71,78 +74,98 @@ export default function Login() {
         <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
           {isRegister && (
             <>
-              <input
-                type="text"
-                name="username"
-                placeholder="Username"
-                value={form.username}
-                onChange={handleChange}
-                className="p-3 rounded-lg bg-[var(--bg-alt)] border border-[var(--border-line)] focus:outline-none focus:border-orange-500 transition-colors duration-300"
-                style={{ color: "var(--text-main)" }}
-                required
-              />
-              <input
-                type="text"
-                name="display_name"
-                placeholder="Display Name"
-                value={form.display_name}
-                onChange={handleChange}
-                className="p-3 rounded-lg bg-[var(--bg-alt)] border border-[var(--border-line)] focus:outline-none focus:border-orange-500 transition-colors duration-300"
-                style={{ color: "var(--text-main)" }}
-                required
-              />
+              <div>
+                <label htmlFor="username" className="sr-only">Username</label>
+                <input
+                  id="username"
+                  type="text"
+                  name="username"
+                  placeholder="Username"
+                  value={form.username}
+                  onChange={handleChange}
+                  className="w-full px-4 py-4 rounded bg-[var(--bg-alt)] focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all border-none"
+                  style={{ color: "var(--text-main)" }}
+                  required
+                  autoComplete="username"
+                />
+              </div>
+              <div>
+                <label htmlFor="display_name" className="sr-only">Display Name</label>
+                <input
+                  id="display_name"
+                  type="text"
+                  name="display_name"
+                  placeholder="Display Name"
+                  value={form.display_name}
+                  onChange={handleChange}
+                  className="w-full px-4 py-4 rounded bg-[var(--bg-alt)] focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all border-none"
+                  style={{ color: "var(--text-main)" }}
+                  required
+                  autoComplete="name"
+                />
+              </div>
             </>
           )}
 
-          <input
-            type="email"
-            name="email"
-            placeholder="Email"
-            value={form.email}
-            onChange={handleChange}
-            className="p-3 rounded-lg bg-[var(--bg-alt)] border border-[var(--border-line)] focus:outline-none focus:border-orange-500 transition-colors duration-300"
-            style={{ color: "var(--text-main)" }}
-            required
-          />
+          <div>
+            <label htmlFor="email" className="sr-only">Email</label>
+            <input
+              id="email"
+              type="email"
+              name="email"
+              placeholder="Email"
+              value={form.email}
+              onChange={handleChange}
+              className="w-full px-4 py-4 rounded bg-[var(--bg-alt)] focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all border-none"
+              style={{ color: "var(--text-main)" }}
+              required
+              autoComplete="email"
+            />
+          </div>
 
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={form.password}
-            onChange={handleChange}
-            className="p-3 rounded-lg bg-[var(--bg-alt)] border border-[var(--border-line)] focus:outline-none focus:border-orange-500 transition-colors duration-300"
-            style={{ color: "var(--text-main)" }}
-            required
-          />
+          <div>
+            <label htmlFor="password" className="sr-only">Password</label>
+            <input
+              id="password"
+              type="password"
+              name="password"
+              placeholder="Password"
+              value={form.password}
+              onChange={handleChange}
+              className="w-full px-4 py-4 rounded bg-[var(--bg-alt)] focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all border-none"
+              style={{ color: "var(--text-main)" }}
+              required
+              autoComplete={isRegister ? "new-password" : "current-password"}
+            />
+          </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="bg-orange-500 py-3 rounded-lg font-semibold hover:bg-orange-600 transition disabled:opacity-50 text-white flex items-center justify-center gap-2"
+            className="bg-orange-500 py-3 rounded-lg font-semibold hover:bg-orange-600 active:scale-[0.98] transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed text-white flex items-center justify-center gap-2 shadow-sm"
           >
-            {loading && <Loader2 size={18} className="animate-spin" />}
+            {loading && <Loader2 size={18} className="animate-spin" aria-hidden="true" />}
             {loading
               ? "Please wait..."
               : isRegister
               ? "Create Account"
-              : "Login"}
+              : "Sign In"}
           </button>
         </form>
 
         <p
-          className="text-sm mt-6 text-center"
+          className="text-sm mt-8 text-center"
           style={{ color: "var(--text-sub)" }}
         >
-          {isRegister ? "Already have an account? " : "Don't have an account? "}
+          {isRegister ? "Already have an account? " : "New to the platform? "}
           <span
-            className="text-orange-400 cursor-pointer hover:underline"
+            className="text-orange-400 cursor-pointer hover:text-orange-300 transition-colors font-medium"
             onClick={() => {
               setIsRegister(!isRegister);
               setError("");
             }}
           >
-            {isRegister ? "Sign in" : "Sign up"}
+            {isRegister ? "Sign in" : "Create account"}
           </span>
         </p>
       </div>

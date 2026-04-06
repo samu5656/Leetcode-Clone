@@ -140,7 +140,7 @@ func (m ContestModel) List(status string, filters Filters) ([]*Contest, Metadata
 		contests = append(contests, &c)
 	}
 
-	return contests, Metadata{CurrentPage: filters.Page, PageSize: filters.PageSize, TotalRecords: totalRecords}, nil
+	return contests, CalculateMetadata(filters.Page, filters.PageSize, totalRecords), nil
 }
 
 // GetProblems returns the problems for a contest with details.

@@ -37,7 +37,8 @@ func (app *application) unauthorizedResponse(w http.ResponseWriter, r *http.Requ
 }
 
 func (app *application) forbiddenResponse(w http.ResponseWriter, r *http.Request) {
-	app.errorResponse(w, r, http.StatusForbidden, "your user account doesn't have the necessary permissions to access this resource")
+	message := "your user account doesn't have the necessary permissions to access this resource"
+	app.errorResponse(w, r, http.StatusForbidden, message)
 }
 
 func (app *application) rateLimitExceededResponse(w http.ResponseWriter, r *http.Request) {

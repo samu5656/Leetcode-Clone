@@ -19,6 +19,28 @@ type LeaderboardModel struct {
 	DB *pgxpool.Pool
 }
 
+func (m LeaderboardModel) scanLeaderboardRows(ctx context.Context, query string, args ...any) ([]LeaderboardEntry, int, error) {
+	rows, err := m.DB.Query(ctx, query, args...)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer rows.Close()
+
+	totalRecords := 0
+	var entries []LeaderboardEntry
+
+	for rows.Next() {
+		var e LeaderboardEntry
+		err := rows.Scan(&totalRecords, &e.Rank, &e.UserID, &e.Username, &e.DisplayName, &e.Score)
+		if err != nil {
+			return nil, 0, err
+		}
+		entries = append(entries, e)
+	}
+
+	return entries, totalRecords, nil
+}
+
 // Global returns the overall leaderboard sorted by total_score.
 func (m LeaderboardModel) Global(filters Filters) ([]LeaderboardEntry, Metadata, error) {
 	query := `
@@ -33,25 +55,12 @@ func (m LeaderboardModel) Global(filters Filters) ([]LeaderboardEntry, Metadata,
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	rows, err := m.DB.Query(ctx, query, filters.Limit(), filters.Offset())
+	entries, totalRecords, err := m.scanLeaderboardRows(ctx, query, filters.Limit(), filters.Offset())
 	if err != nil {
 		return nil, Metadata{}, err
 	}
-	defer rows.Close()
 
-	totalRecords := 0
-	var entries []LeaderboardEntry
-
-	for rows.Next() {
-		var e LeaderboardEntry
-		err := rows.Scan(&totalRecords, &e.Rank, &e.UserID, &e.Username, &e.DisplayName, &e.Score)
-		if err != nil {
-			return nil, Metadata{}, err
-		}
-		entries = append(entries, e)
-	}
-
-	return entries, Metadata{CurrentPage: filters.Page, PageSize: filters.PageSize, TotalRecords: totalRecords}, nil
+	return entries, CalculateMetadata(filters.Page, filters.PageSize, totalRecords), nil
 }
 
 // Contest returns the leaderboard for a specific contest.
@@ -69,23 +78,10 @@ func (m LeaderboardModel) Contest(contestID string, filters Filters) ([]Leaderbo
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	rows, err := m.DB.Query(ctx, query, contestID, filters.Limit(), filters.Offset())
+	entries, totalRecords, err := m.scanLeaderboardRows(ctx, query, contestID, filters.Limit(), filters.Offset())
 	if err != nil {
 		return nil, Metadata{}, err
 	}
-	defer rows.Close()
 
-	totalRecords := 0
-	var entries []LeaderboardEntry
-
-	for rows.Next() {
-		var e LeaderboardEntry
-		err := rows.Scan(&totalRecords, &e.Rank, &e.UserID, &e.Username, &e.DisplayName, &e.Score)
-		if err != nil {
-			return nil, Metadata{}, err
-		}
-		entries = append(entries, e)
-	}
-
-	return entries, Metadata{CurrentPage: filters.Page, PageSize: filters.PageSize, TotalRecords: totalRecords}, nil
+	return entries, CalculateMetadata(filters.Page, filters.PageSize, totalRecords), nil
 }

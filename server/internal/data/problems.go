@@ -211,11 +211,7 @@ func (m ProblemModel) List(difficulty string, filters Filters) ([]*Problem, Meta
 		problems = append(problems, &p)
 	}
 
-	metadata := Metadata{
-		CurrentPage:  filters.Page,
-		PageSize:     filters.PageSize,
-		TotalRecords: totalRecords,
-	}
+	metadata := CalculateMetadata(filters.Page, filters.PageSize, totalRecords)
 
 	return problems, metadata, nil
 }
@@ -309,4 +305,26 @@ func (m ProblemModel) GetBoilerplate(problemID, language string) (*Boilerplate, 
 	}
 
 	return &bp, nil
+}
+
+// IsCompletedByUser checks if a user has an accepted submission for a problem.
+// If contestID is provided, only checks submissions within that contest.
+func (m ProblemModel) IsCompletedByUser(problemID, userID string, contestID *string) (bool, error) {
+	var query string
+	var args []any
+
+	if contestID != nil {
+		query = `SELECT EXISTS(SELECT 1 FROM submissions WHERE problem_id = $1 AND user_id = $2 AND contest_id = $3 AND status = 'accepted')`
+		args = []any{problemID, userID, *contestID}
+	} else {
+		query = `SELECT EXISTS(SELECT 1 FROM submissions WHERE problem_id = $1 AND user_id = $2 AND status = 'accepted')`
+		args = []any{problemID, userID}
+	}
+
+	var exists bool
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	err := m.DB.QueryRow(ctx, query, args...).Scan(&exists)
+	return exists, err
 }

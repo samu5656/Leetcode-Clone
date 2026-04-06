@@ -58,8 +58,8 @@ func (app *application) createContestHandler(w http.ResponseWriter, r *http.Requ
 func (app *application) listContestsHandler(w http.ResponseWriter, r *http.Request) {
 	status := app.readString(r, "status", "")
 	filters := data.Filters{
-		Page:     app.readInt(r, "page", 1),
-		PageSize: app.readInt(r, "page_size", 20),
+		Page:     app.readIntWithBounds(r, "page", 1, 1, 10000),
+		PageSize: app.readIntWithBounds(r, "page_size", 20, 1, 100),
 	}
 
 	contests, metadata, err := app.models.Contests.List(status, filters)
@@ -86,12 +86,46 @@ func (app *application) getContestHandler(w http.ResponseWriter, r *http.Request
 
 	response := envelope{"contest": contest}
 
-	// Only show problems if contest is active or ended.
-	if contest.Status == "active" || contest.Status == "ended" {
-		problems, err := app.models.Contests.GetProblems(contest.ID)
+	// Check if user has joined (for authenticated requests)
+	claims := app.userFromContext(r)
+	if claims != nil {
+		isJoined, err := app.models.Contests.IsParticipant(contest.ID, claims.UserID)
 		if err != nil {
 			app.serverErrorResponse(w, r, err)
 			return
+		}
+		response["is_joined"] = isJoined
+	}
+
+	// Only show problems if contest is active or ended.
+	if contest.Status == "active" || contest.Status == "ended" {
+		problemsList, err := app.models.Contests.GetProblems(contest.ID)
+		if err != nil {
+			app.serverErrorResponse(w, r, err)
+			return
+		}
+
+		problems := make([]map[string]any, 0, len(problemsList))
+		for _, p := range problemsList {
+			problem := map[string]any{
+				"problem_id": p.ProblemID,
+				"points":     p.Points,
+				"title":      p.Title,
+				"slug":       p.Slug,
+				"difficulty": p.Difficulty,
+			}
+			
+			// Add completion status if user is authenticated
+			if claims != nil {
+				isCompleted, err := app.models.Problems.IsCompletedByUser(p.ProblemID, claims.UserID, &contest.ID)
+				if err != nil {
+					app.serverErrorResponse(w, r, err)
+					return
+				}
+				problem["is_completed"] = isCompleted
+			}
+			
+			problems = append(problems, problem)
 		}
 		response["problems"] = problems
 	}
@@ -130,8 +164,8 @@ func (app *application) joinContestHandler(w http.ResponseWriter, r *http.Reques
 func (app *application) contestLeaderboardHandler(w http.ResponseWriter, r *http.Request) {
 	contestID := app.readIDParam(r, "id")
 	filters := data.Filters{
-		Page:     app.readInt(r, "page", 1),
-		PageSize: app.readInt(r, "page_size", 50),
+		Page:     app.readIntWithBounds(r, "page", 1, 1, 10000),
+		PageSize: app.readIntWithBounds(r, "page_size", 50, 1, 100),
 	}
 
 	entries, metadata, err := app.models.Leaderboard.Contest(contestID, filters)
