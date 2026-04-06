@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -31,7 +32,7 @@ func (app *application) createProblemHandler(w http.ResponseWriter, r *http.Requ
 
 	for i, bp := range input.Boilerplates {
 		if !strings.Contains(bp.Code, "{{USER_CODE}}") {
-			v.AddError("boilerplates", "boilerplate "+string(rune('0'+i))+" must contain {{USER_CODE}} placeholder")
+			v.AddError("boilerplates", fmt.Sprintf("boilerplate %d must contain {{USER_CODE}} placeholder", i))
 		}
 	}
 
@@ -52,8 +53,8 @@ func (app *application) createProblemHandler(w http.ResponseWriter, r *http.Requ
 func (app *application) listProblemsHandler(w http.ResponseWriter, r *http.Request) {
 	difficulty := app.readString(r, "difficulty", "")
 	filters := data.Filters{
-		Page:     app.readInt(r, "page", 1),
-		PageSize: app.readInt(r, "page_size", 20),
+		Page:     app.readIntWithBounds(r, "page", 1, 1, 10000),
+		PageSize: app.readIntWithBounds(r, "page_size", 20, 1, 100),
 	}
 
 	problems, metadata, err := app.models.Problems.List(difficulty, filters)

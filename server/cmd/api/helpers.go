@@ -15,7 +15,16 @@ type envelope map[string]any
 
 // writeJSON writes a JSON response with the given status code and headers.
 func (app *application) writeJSON(w http.ResponseWriter, status int, data envelope, headers http.Header) error {
-	js, err := json.MarshalIndent(data, "", "\t")
+	var js []byte
+	var err error
+	
+	// Use indentation only in development
+	if app.config.env == "development" {
+		js, err = json.MarshalIndent(data, "", "\t")
+	} else {
+		js, err = json.Marshal(data)
+	}
+	
 	if err != nil {
 		return err
 	}
@@ -27,7 +36,10 @@ func (app *application) writeJSON(w http.ResponseWriter, status int, data envelo
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	w.Write(js)
+	_, err = w.Write(js)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -92,6 +104,19 @@ func (app *application) readInt(r *http.Request, key string, defaultValue int) i
 	}
 	i, err := strconv.Atoi(s)
 	if err != nil {
+		return defaultValue
+	}
+	return i
+}
+
+// readIntWithBounds reads an integer query parameter with validation and bounds checking.
+func (app *application) readIntWithBounds(r *http.Request, key string, defaultValue, min, max int) int {
+	s := r.URL.Query().Get(key)
+	if s == "" {
+		return defaultValue
+	}
+	i, err := strconv.Atoi(s)
+	if err != nil || i < min || i > max {
 		return defaultValue
 	}
 	return i

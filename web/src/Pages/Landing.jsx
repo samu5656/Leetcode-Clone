@@ -1,81 +1,63 @@
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, Code, Trophy, Users } from "lucide-react";
-import bgimage from "../assets/code-landing.jpg";
+import { ArrowRight, Code, Trophy, Users, Sparkles } from "lucide-react";
 
 export default function Landing() {
   const navigate = useNavigate();
 
   return (
-    <div className="text-[var(--text-main)] transition-colors duration-300">
+    <div className="flex flex-col justify-center min-h-screen px-6 md:px-12 lg:px-24 pb-20 text-[var(--text-main)] transition-colors duration-300">
+      
+      <div className="max-w-5xl w-full mx-auto md:mx-0 mt-32">
+        <div className="flex items-center gap-3 mb-8">
+          <span className="w-2 h-2 bg-orange-500 rounded-full" aria-hidden="true"></span>
+          <span className="text-sm font-semibold tracking-wide uppercase" style={{ color: "var(--accent)" }}>
+            Interview Prep Made Simple
+          </span>
+        </div>
 
-      <div className="relative h-screen w-full overflow-hidden">
+        <h1 className="text-6xl md:text-8xl font-black mb-8 leading-none tracking-tight">
+          Build confidence,
+          <br />
+          <span style={{ color: "var(--accent)" }}>
+            ace interviews.
+          </span>
+        </h1>
 
-        <img
-          src={bgimage}
-          alt="Code background"
-          className="absolute w-full h-full object-cover"
-          style={{ opacity: 0.08 }}
-        />
+        <p className="mb-12 max-w-xl text-xl leading-relaxed" style={{ color: "var(--text-sub)" }}>
+          Practice data structures and algorithms at your own pace. 
+          Track your progress and feel prepared for technical interviews.
+        </p>
 
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[var(--bg-main)]/60 to-[var(--bg-main)]"></div>
+        <div className="flex gap-6 flex-wrap mb-32">
+          <button
+            onClick={() => navigate("/login")}
+            className="bg-orange-500 hover:bg-orange-600 active:scale-[0.98] text-white px-8 py-4 rounded-lg font-semibold flex items-center gap-2 transition-all duration-150 shadow-sm"
+          >
+            Start Practicing <ArrowRight size={18} aria-hidden="true" />
+          </button>
+          <button
+            onClick={() => navigate("/problems")}
+            className="px-8 py-4 rounded-lg font-semibold flex items-center gap-2 transition-all duration-150 border border-transparent hover:border-[var(--border-line)] active:scale-[0.98]"
+            style={{ color: "var(--text-main)", background: "var(--bg-alt)" }}
+          >
+            Browse Problems
+          </button>
+        </div>
 
-        <div className="relative z-10 flex flex-col justify-center items-center h-full text-center px-4">
-
-          <div className="flex items-center gap-2 mb-6 px-4 py-2 rounded-full border border-[var(--border-line)] bg-[var(--bg-card)]/60 backdrop-blur-sm">
-            <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
-            <span className="text-sm font-medium" style={{ color: "var(--text-sub)" }}>
-              Open Source Coding Platform
-            </span>
-          </div>
-
-          <h1 className="text-5xl md:text-7xl font-black mb-4 leading-tight">
-            Ready to evolve
-            <br />
-            <span className="bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent">
-              your stack?
-            </span>
-          </h1>
-
-          <p className="mb-8 max-w-xl text-lg" style={{ color: "var(--text-sub)" }}>
-            Practice DSA, compete in contests, and become a better developer.
-          </p>
-
-          <div className="flex gap-4 flex-wrap justify-center">
-            <button
-              onClick={() => navigate("/login")}
-              className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3.5 rounded-xl font-semibold flex items-center gap-2 transition shadow-lg shadow-orange-500/20 hover:shadow-orange-500/40"
-            >
-              Start Coding Now <ArrowRight size={18} />
-            </button>
-            <button
-              onClick={() => navigate("/problems")}
-              className="px-8 py-3.5 rounded-xl font-semibold flex items-center gap-2 transition border border-[var(--border-line)] hover:border-orange-400"
-              style={{ color: "var(--text-main)", background: "var(--bg-card)" }}
-            >
-              Browse Problems
-            </button>
-          </div>
-
-          {/* Feature highlights */}
-          <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl w-full">
-            {[
-              { icon: <Code size={24} />, title: "8+ Languages", desc: "Python, C++, Go, Rust & more" },
-              { icon: <Trophy size={24} />, title: "Live Contests", desc: "Compete in real-time challenges" },
-              { icon: <Users size={24} />, title: "Leaderboard", desc: "Climb the global rankings" },
-            ].map((feat) => (
-              <div
-                key={feat.title}
-                className="p-5 rounded-xl border border-[var(--border-line)] bg-[var(--bg-card)]/60 backdrop-blur-sm hover:border-orange-400/50 transition text-center"
-              >
-                <div className="text-orange-400 mb-3 flex justify-center">{feat.icon}</div>
-                <h3 className="font-bold text-sm mb-1">{feat.title}</h3>
-                <p className="text-xs" style={{ color: "var(--text-sub)" }}>{feat.desc}</p>
-              </div>
-            ))}
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-16 max-w-4xl">
+          {[
+            { icon: <Code size={28} aria-hidden="true" />, title: "8+ Languages", desc: "Python, C++, Java, JavaScript & more" },
+            { icon: <Trophy size={28} aria-hidden="true" />, title: "Live Contests", desc: "Test yourself under real interview pressure" },
+            { icon: <Users size={28} aria-hidden="true" />, title: "Track Progress", desc: "See your improvement over time" },
+          ].map((feat) => (
+            <div key={feat.title} className="flex flex-col items-start group">
+              <div className="mb-5 text-orange-500 transform group-hover:-translate-y-1 transition-transform duration-200">{feat.icon}</div>
+              <h3 className="font-bold text-xl mb-2">{feat.title}</h3>
+              <p className="text-base leading-relaxed" style={{ color: "var(--text-sub)" }}>{feat.desc}</p>
+            </div>
+          ))}
         </div>
       </div>
-
     </div>
   );
 }

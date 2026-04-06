@@ -5,12 +5,32 @@ import (
 	"errors"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/vj/dsa-contest-backend/internal/data"
 	"github.com/vj/dsa-contest-backend/internal/executor"
 )
 
 const maxSourceCodeBytes = 64 * 1024 // 64 KB
+
+// removeStarterCode removes the ====STARTER_CODE==== blocks from boilerplate.
+func removeStarterCode(boilerplate string) string {
+	startMarker := "====STARTER_CODE===="
+	startIdx := strings.Index(boilerplate, startMarker)
+	if startIdx == -1 {
+		return boilerplate
+	}
+	
+	afterStart := startIdx + len(startMarker)
+	endIdx := strings.Index(boilerplate[afterStart:], startMarker)
+	if endIdx == -1 {
+		return boilerplate
+	}
+	
+	// Remove the block and its surrounding tags
+	result := boilerplate[:startIdx] + boilerplate[afterStart+endIdx+len(startMarker):]
+	return strings.TrimPrefix(result, "\n")
+}
 
 func (app *application) createSubmissionHandler(w http.ResponseWriter, r *http.Request) {
 	claims := app.userFromContext(r)
@@ -84,17 +104,8 @@ func (app *application) createSubmissionHandler(w http.ResponseWriter, r *http.R
 		app.serverErrorResponse(w, r, err)
 		return
 	}
-	bpCode := bp.Code
-	startIdx := strings.Index(bpCode, "====STARTER_CODE====")
-	if startIdx != -1 {
-		endIdx := strings.Index(bpCode[startIdx+20:], "====STARTER_CODE====")
-		if endIdx != -1 {
-			// Remove the block and its surrounding tags
-			bpCode = bpCode[:startIdx] + bpCode[startIdx+20+endIdx+20:]
-			bpCode = strings.TrimPrefix(bpCode, "\n")
-		}
-	}
-
+	
+	bpCode := removeStarterCode(bp.Code)
 	sourceCode = strings.Replace(bpCode, "{{USER_CODE}}", input.SourceCode, 1)
 
 	// Insert submission as pending.
@@ -126,8 +137,16 @@ func (app *application) createSubmissionHandler(w http.ResponseWriter, r *http.R
 }
 
 // evaluateSubmission runs all test cases and updates the submission.
-func (app *application) evaluateSubmission(submissionID string, problem *data.Problem, sourceCode, language, userID string, contestID *string) {
-	ctx := context.Background()
+func (app *application) evaluateSubmission(
+	submissionID string,
+	problem *data.Problem,
+	sourceCode, language, userID string,
+	contestID *string,
+) {
+	// Add a generous global timeout across all test cases to prevent goroutine 
+	// leakage if the executor or Piston goes down or connection hangs.
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
 
 	testCases, err := app.models.Problems.GetTestCases(problem.ID, false)
 	if err != nil {
@@ -141,6 +160,7 @@ func (app *application) evaluateSubmission(submissionID string, problem *data.Pr
 	var maxMemoryKb float64
 	finalStatus := "accepted"
 	var errorMessage *string
+	var failedInput, failedExpected, failedActual *string
 
 	for _, tc := range testCases {
 		result := app.executor.Evaluate(ctx, language, sourceCode, tc.Input, tc.ExpectedOutput, problem.TimeLimitMs, problem.MemoryLimitKb)
@@ -160,8 +180,15 @@ func (app *application) evaluateSubmission(submissionID string, problem *data.Pr
 			if result.Stderr != "" {
 				errorMessage = &result.Stderr
 			}
-			// Early exit on compilation error.
-			if result.Status == "compilation_error" {
+			// Capture the first failed test case details (only for wrong_answer)
+			if failedInput == nil && result.Status == "wrong_answer" {
+				failedInput = &tc.Input
+				failedExpected = &tc.ExpectedOutput
+				actual := strings.TrimSpace(result.Stdout)
+				failedActual = &actual
+			}
+			// Early exit on compilation error or internal system error
+			if result.Status == "compilation_error" || result.Status == "error" {
 				break
 			}
 		}
@@ -185,7 +212,11 @@ func (app *application) evaluateSubmission(submissionID string, problem *data.Pr
 	}
 
 	// Update submission result.
-	err = app.models.Submissions.UpdateResult(submissionID, finalStatus, passed, total, maxTimeMs, maxMemoryKb, score, errorMessage)
+	err = app.models.Submissions.UpdateResult(
+		submissionID, finalStatus, passed, total,
+		maxTimeMs, maxMemoryKb, score, errorMessage,
+		failedInput, failedExpected, failedActual,
+	)
 	if err != nil {
 		app.logger.Error("failed to update submission", "error", err, "submission_id", submissionID)
 		return
@@ -223,18 +254,21 @@ func (app *application) getSubmissionHandler(w http.ResponseWriter, r *http.Requ
 
 	// Don't return source_code in the response for security.
 	app.writeJSON(w, http.StatusOK, envelope{"submission": map[string]any{
-		"id":            sub.ID,
-		"user_id":       sub.UserID,
-		"problem_id":    sub.ProblemID,
-		"contest_id":    sub.ContestID,
-		"language":      sub.Language,
-		"status":        sub.Status,
-		"passed":        sub.Passed,
-		"total":         sub.Total,
-		"time_ms":       sub.TimeMs,
-		"memory_kb":     sub.MemoryKb,
-		"score":         sub.Score,
-		"error_message": sub.ErrorMessage,
-		"created_at":    sub.CreatedAt,
+		"id":              sub.ID,
+		"user_id":         sub.UserID,
+		"problem_id":      sub.ProblemID,
+		"contest_id":      sub.ContestID,
+		"language":        sub.Language,
+		"status":          sub.Status,
+		"passed":          sub.Passed,
+		"total":           sub.Total,
+		"time_ms":         sub.TimeMs,
+		"memory_kb":       sub.MemoryKb,
+		"score":           sub.Score,
+		"error_message":   sub.ErrorMessage,
+		"failed_input":    sub.FailedInput,
+		"failed_expected": sub.FailedExpected,
+		"failed_actual":   sub.FailedActual,
+		"created_at":      sub.CreatedAt,
 	}}, nil)
 }

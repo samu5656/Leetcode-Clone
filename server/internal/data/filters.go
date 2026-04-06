@@ -21,4 +21,19 @@ type Metadata struct {
 	CurrentPage  int `json:"current_page"`
 	PageSize     int `json:"page_size"`
 	TotalRecords int `json:"total_records"`
+	TotalPages   int `json:"total_pages"`
+}
+
+// CalculateMetadata creates pagination metadata with total pages computed.
+func CalculateMetadata(page, pageSize, totalRecords int) Metadata {
+	totalPages := 0
+	if totalRecords > 0 {
+		totalPages = (totalRecords + pageSize - 1) / pageSize
+	}
+	return Metadata{
+		CurrentPage:  page,
+		PageSize:     pageSize,
+		TotalRecords: totalRecords,
+		TotalPages:   totalPages,
+	}
 }

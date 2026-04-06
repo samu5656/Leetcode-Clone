@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 	"sync"
@@ -29,7 +31,14 @@ func (app *application) recoverPanic(next http.Handler) http.Handler {
 		defer func() {
 			if err := recover(); err != nil {
 				w.Header().Set("Connection", "close")
-				app.serverErrorResponse(w, r, err.(error))
+				// Safely convert panic to error
+				var errObj error
+				if e, ok := err.(error); ok {
+					errObj = e
+				} else {
+					errObj = errors.New(fmt.Sprint(err))
+				}
+				app.serverErrorResponse(w, r, errObj)
 			}
 		}()
 		next.ServeHTTP(w, r)

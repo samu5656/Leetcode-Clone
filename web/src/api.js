@@ -35,11 +35,21 @@ api.interceptors.response.use(
           localStorage.setItem("access_token", newToken);
           originalRequest.headers.Authorization = `Bearer ${newToken}`;
           return api(originalRequest);
-        } catch {
+        } catch (refreshError) {
           // Refresh failed — force logout.
           localStorage.removeItem("access_token");
           localStorage.removeItem("refresh_token");
-          window.dispatchEvent(new Event("authChange"));
+          
+          try {
+            window.dispatchEvent(new Event("authChange"));
+          } catch (eventError) {
+            console.error("Failed to dispatch authChange event:", eventError);
+          }
+          
+          alert("Your session has expired. Please log in again.");
+          window.location.href = "/login";
+          
+          return Promise.reject(refreshError);
         }
       }
     }
@@ -99,6 +109,7 @@ export const leaderboardAPI = {
 
 export const adminAPI = {
   createProblem: (data) => api.post("/v1/admin/problems", data),
+  bulkCreateProblems: (data) => api.post("/v1/admin/problems/bulk", data),
   deleteProblem: (id) => api.delete(`/v1/admin/problems/${id}`),
   createContest: (data) => api.post("/v1/admin/contests", data),
 };

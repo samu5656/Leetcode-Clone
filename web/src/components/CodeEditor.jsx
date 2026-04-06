@@ -47,11 +47,7 @@ const languageExtensions = {
   javascript: () => javascript(),
   python: () => python(),
   "c++": () => cpp(),
-  c: () => cpp(),
-  go: () => javascript(), // Go mode: similar enough syntax highlighting
-  java: () => java(),
-  rust: () => rust(),
-  dart: () => javascript(), // Dart mode: JS highlighting as fallback
+  java: () => java(),// Dart mode: JS highlighting as fallback
 };
 
 // Custom theme overrides that match the app's design tokens.
@@ -122,7 +118,7 @@ export default function CodeEditor({
     onChangeRef.current = onChange;
   }, [onChange]);
 
-  // Create / recreate editor when language changes.
+  // Create / recreate editor when language or placeholder changes.
   useEffect(() => {
     if (!containerRef.current) return;
 
@@ -183,8 +179,7 @@ export default function CodeEditor({
       view.destroy();
       viewRef.current = null;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [language]);
+  }, [language, placeholder]);
 
   // Sync external value changes (e.g. reset code).
   useEffect(() => {

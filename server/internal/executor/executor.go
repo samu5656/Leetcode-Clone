@@ -48,7 +48,11 @@ func New(baseURL string) (*Executor, error) {
 }
 
 // Run executes source code against Piston and returns the raw execution result.
-func (e *Executor) Run(ctx context.Context, language, source, stdin string, timeLimitMs, memoryLimitKb int) (*gopiston.PistonExecution, error) {
+func (e *Executor) Run(
+	ctx context.Context,
+	language, source, stdin string,
+	timeLimitMs, memoryLimitKb int,
+) (*gopiston.PistonExecution, error) {
 	version := e.versions[language]
 	return e.client.Execute(
 		ctx,
@@ -62,9 +66,16 @@ func (e *Executor) Run(ctx context.Context, language, source, stdin string, time
 }
 
 // Evaluate runs source code against a single test case and returns a Result.
-func (e *Executor) Evaluate(ctx context.Context, language, source, stdin, expectedOutput string, timeLimitMs, memoryLimitKb int) Result {
+func (e *Executor) Evaluate(
+	ctx context.Context,
+	language, source, stdin, expectedOutput string,
+	timeLimitMs, memoryLimitKb int,
+) Result {
 	exec, err := e.Run(ctx, language, source, stdin, timeLimitMs, memoryLimitKb)
 	if err != nil {
+		if ctx.Err() != nil {
+			return Result{Status: "error", Stderr: "Execution system timeout: execution took too long or Piston server is unavailable."}
+		}
 		return Result{Status: "runtime_error", Stderr: err.Error()}
 	}
 
@@ -98,6 +109,6 @@ func (e *Executor) Evaluate(ctx context.Context, language, source, stdin, expect
 		Status:   status,
 		Stdout:   exec.Run.Stdout,
 		TimeMs:   exec.Run.WallTime,
-		MemoryKb: exec.Run.Memory / 1024,
+		MemoryKb: float64(exec.Run.Memory) / 1024.0,
 	}
 }

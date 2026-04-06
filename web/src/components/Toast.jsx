@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback, createContext, useContext } from "react";
-import { CheckCircle, XCircle, Info, AlertTriangle, X } from "lucide-react";
+import { CheckCircle, XCircle, Info, AlertTriangle, X, Sparkles } from "lucide-react";
 
 const ToastContext = createContext(null);
 
 const ICONS = {
-  success: <CheckCircle size={18} />,
+  success: <Sparkles size={18} />,
   error: <XCircle size={18} />,
   info: <Info size={18} />,
   warning: <AlertTriangle size={18} />,
@@ -57,7 +57,7 @@ export function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([]);
 
   const addToast = useCallback((message, type = "info", duration = 3500) => {
-    const id = Date.now() + Math.random();
+    const id = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
     setToasts((prev) => [...prev, { id, message, type, duration }]);
   }, []);
 

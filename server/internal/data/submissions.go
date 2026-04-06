@@ -23,6 +23,10 @@ type Submission struct {
 	MemoryKb     *float64  `json:"memory_kb,omitempty"`
 	Score        int       `json:"score"`
 	ErrorMessage *string   `json:"error_message,omitempty"`
+	// Failed test case details (only for non-accepted submissions)
+	FailedInput          *string `json:"failed_input,omitempty"`
+	FailedExpected       *string `json:"failed_expected,omitempty"`
+	FailedActual         *string `json:"failed_actual,omitempty"`
 	CreatedAt    time.Time `json:"created_at"`
 }
 
@@ -46,16 +50,23 @@ func (m SubmissionModel) Insert(sub *Submission) error {
 }
 
 // UpdateResult updates a submission after evaluation is complete.
-func (m SubmissionModel) UpdateResult(id, status string, passed, total int, timeMs, memoryKb float64, score int, errorMessage *string) error {
+func (m SubmissionModel) UpdateResult(
+	id, status string,
+	passed, total int,
+	timeMs, memoryKb float64,
+	score int,
+	errorMessage, failedInput, failedExpected, failedActual *string,
+) error {
 	query := `
 		UPDATE submissions
-		SET status = $2, passed = $3, total = $4, time_ms = $5, memory_kb = $6, score = $7, error_message = $8
+		SET status = $2, passed = $3, total = $4, time_ms = $5, memory_kb = $6, score = $7, 
+		    error_message = $8, failed_input = $9, failed_expected = $10, failed_actual = $11
 		WHERE id = $1`
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	_, err := m.DB.Exec(ctx, query, id, status, passed, total, timeMs, memoryKb, score, errorMessage)
+	_, err := m.DB.Exec(ctx, query, id, status, passed, total, timeMs, memoryKb, score, errorMessage, failedInput, failedExpected, failedActual)
 	return err
 }
 
@@ -63,7 +74,8 @@ func (m SubmissionModel) UpdateResult(id, status string, passed, total int, time
 func (m SubmissionModel) GetByID(id string) (*Submission, error) {
 	query := `
 		SELECT id, user_id, problem_id, contest_id, language, source_code,
-		       status, passed, total, time_ms, memory_kb, score, error_message, created_at
+		       status, passed, total, time_ms, memory_kb, score, error_message,
+		       failed_input, failed_expected, failed_actual, created_at
 		FROM submissions WHERE id = $1`
 
 	var s Submission
@@ -72,7 +84,8 @@ func (m SubmissionModel) GetByID(id string) (*Submission, error) {
 
 	err := m.DB.QueryRow(ctx, query, id).Scan(
 		&s.ID, &s.UserID, &s.ProblemID, &s.ContestID, &s.Language, &s.SourceCode,
-		&s.Status, &s.Passed, &s.Total, &s.TimeMs, &s.MemoryKb, &s.Score, &s.ErrorMessage, &s.CreatedAt,
+		&s.Status, &s.Passed, &s.Total, &s.TimeMs, &s.MemoryKb, &s.Score, &s.ErrorMessage,
+		&s.FailedInput, &s.FailedExpected, &s.FailedActual, &s.CreatedAt,
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {

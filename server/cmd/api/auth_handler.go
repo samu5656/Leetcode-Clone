@@ -4,7 +4,6 @@ import (
 	"errors"
 	"net/http"
 	"regexp"
-	"time"
 	"unicode"
 
 	"github.com/vj/dsa-contest-backend/internal/auth"
@@ -26,9 +25,11 @@ func (app *application) registerHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	emailPattern := `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`
+	
 	v := validator.New()
 	v.Check(input.Email != "", "email", "must be provided")
-	v.Check(regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`).MatchString(input.Email), "email", "must be a valid email address")
+	v.Check(regexp.MustCompile(emailPattern).MatchString(input.Email), "email", "must be a valid email address")
 	v.Check(len(input.Username) >= 3 && len(input.Username) <= 20, "username", "must be between 3 and 20 characters")
 	v.Check(len(input.Password) >= 8, "password", "must be at least 8 characters")
 	v.Check(hasUpper(input.Password), "password", "must contain at least one uppercase letter")
@@ -150,7 +151,7 @@ func (app *application) refreshTokenHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	accessToken, err := auth.GenerateToken(user.ID, user.Role, app.config.jwt.accessSecret, 15*time.Minute)
+	accessToken, err := auth.GenerateToken(user.ID, user.Role, app.config.jwt.accessSecret, app.config.jwt.accessExpiry)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return

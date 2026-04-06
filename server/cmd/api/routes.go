@@ -43,6 +43,7 @@ func (app *application) routes() http.Handler {
 
 	// --- Admin routes ---
 	mux.Handle("POST /v1/admin/problems", app.authenticate(app.requireAdmin(http.HandlerFunc(app.createProblemHandler))))
+	mux.Handle("POST /v1/admin/problems/bulk", app.authenticate(app.requireAdmin(http.HandlerFunc(app.bulkCreateProblemsHandler))))
 	mux.Handle("DELETE /v1/admin/problems/{id}", app.authenticate(app.requireAdmin(http.HandlerFunc(app.deleteProblemHandler))))
 	mux.Handle("POST /v1/admin/contests", app.authenticate(app.requireAdmin(http.HandlerFunc(app.createContestHandler))))
 

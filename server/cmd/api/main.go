@@ -54,6 +54,20 @@ func main() {
 
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 
+	// Validate required configuration.
+	if cfg.db.dsn == "" {
+		logger.Error("database DSN is required (--db-dsn or DSA_DB_DSN)")
+		os.Exit(1)
+	}
+	if cfg.jwt.accessSecret == "" {
+		logger.Error("JWT access secret is required (--jwt-access-secret or DSA_JWT_ACCESS_SECRET)")
+		os.Exit(1)
+	}
+	if cfg.jwt.refreshSecret == "" {
+		logger.Error("JWT refresh secret is required (--jwt-refresh-secret or DSA_JWT_REFRESH_SECRET)")
+		os.Exit(1)
+	}
+
 	// Connect to database.
 	dbpool, err := openDB(cfg)
 	if err != nil {
